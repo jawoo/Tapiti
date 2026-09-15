@@ -3,6 +3,7 @@ package org.cgiar.tokki;
 public record TokkiConfig(
         String tableNameUnitInformation,
         String countryCode,
+        String soilFileName,
         int numberOfThreads,
         int limitForDebugging,
         boolean scenarioCombinations,

@@ -16,16 +16,16 @@ tableNameUnitInformation: unit-information
 countryCode: BOL
 soilFileName: BO.SOL   # base name must match the soilProfileId prefix (BO########)
 
-numberOfThreads: 48    # box has 112 cores; 48 matches the tested US ceiling
-limitForDebugging: 0
+numberOfThreads: 4
+limitForDebugging: 20
 
 # Hindcast span: sowing years 1983..2024 = 42 campaigns, matching the INE
 # "Año Agrícola" series (1983-84 -> 2024-25). Requires weather through 2025.
-firstPlantingYear: 1983
-numberOfYears: 42
+firstPlantingYear: 2015
+numberOfYears: 2
 
 directory:
-  weather: 1983-2026_bol-5crop
+  weather: smoke
   working: res
   source: .csm
   temp: .temp

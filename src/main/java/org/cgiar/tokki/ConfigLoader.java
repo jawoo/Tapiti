@@ -26,6 +26,16 @@ public final class ConfigLoader
 
         String tableNameUnitInformation = (String) config.get("tableNameUnitInformation");
         String countryCode = (String) config.get("countryCode");
+
+        // Name of the DSSAT soil file in the input directory. Its base name must match the
+        // two-character prefix of every soilProfileId, because the thread writers derive the
+        // per-thread copy's filename from that prefix (soilProfileID.substring(0,2)+".SOL").
+        // Set explicitly rather than derived from countryCode: the first two letters of an
+        // ISO3 code are not a reliable ISO2 (CHL and CHN both give "CH").
+        String soilFileName = config.containsKey("soilFileName")
+                ? (String) config.get("soilFileName")
+                : "US.SOL";   // historical default, keeps existing configs working
+
         int numberOfThreads = (int) config.get("numberOfThreads");
         int limitForDebugging = (int) config.get("limitForDebugging");
         boolean scenarioCombinations = (int) config.get("scenarioCombinations") > 0;
@@ -76,6 +86,7 @@ public final class ConfigLoader
         return new TokkiConfig(
                 tableNameUnitInformation,
                 countryCode,
+                soilFileName,
                 numberOfThreads,
                 limitForDebugging,
                 scenarioCombinations,

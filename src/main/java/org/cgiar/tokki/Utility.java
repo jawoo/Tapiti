@@ -447,7 +447,7 @@ public class Utility
         }
     }    
 
-    // Parse US.SOL into a map of soilProfileId -> full DSSAT profile text.
+    // Parse the country soil file into a map of soilProfileId -> full DSSAT profile text.
     // Profiles are blank-line-separated blocks; each begins with "*<id> ...".
     static Map<String, String> loadSoilProfiles(String path)
     {
@@ -507,18 +507,18 @@ public class Utility
     }
 
     // List of Unit IDs — read from the JSONL table (one cell per line, crops
-    // nested) and resolve each cell's soil profile from US.SOL by soilProfileId.
+    // nested) and resolve each cell's soil profile from the country soil file by soilProfileId.
     // Each returned Object[16] is one (cell, crop, cultivar) unit; the positional
     // layout is unchanged from the previous CSV reader so downstream code is intact.
     @SuppressWarnings("unchecked")
-    public static Object[] getUnitInfo(String tableName, String directoryInput, int limitForDebugging)
+    public static Object[] getUnitInfo(String tableName, String directoryInput, String soilFileName, int limitForDebugging)
     {
         int counter = 0;
         int skippedInvalid = 0;
         List<Object[]> unitInfo = Lists.newArrayList();
 
-        // Soil profiles now live in a separate US.SOL, keyed by soilProfileId.
-        Map<String, String> soilProfiles = loadSoilProfiles(directoryInput + "US.SOL");
+        // Soil profiles live in a separate country soil file, keyed by soilProfileId.
+        Map<String, String> soilProfiles = loadSoilProfiles(directoryInput + soilFileName);
 
         // Validate each record against the JSON Schema so the running model
         // rejects exactly what the converter would (single source of truth).
@@ -580,7 +580,7 @@ public class Utility
                     if (soilProfile == null)
                     {
                         System.err.println("> getUnitInfo: skipping UnitID " + unitId + " (CELL5M " + cell5m
-                                + "): soil profile " + soilProfileId + " not found in US.SOL");
+                                + "): soil profile " + soilProfileId + " not found in " + soilFileName);
                         continue;
                     }
 

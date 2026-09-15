@@ -55,6 +55,7 @@ public class App
     static String dataDaysToFlowering;
     static int numberOfThreads = 4;    // per box
     static String countryCode = "ETH";
+    static String soilFileName = "US.SOL";
     static int limitForDebugging = 1;
     static int firstPlantingYear = 2021;
     static int numberOfYears = 5;
@@ -102,6 +103,7 @@ public class App
             TokkiConfig cfg = ConfigLoader.load("." + d + "config.yml", d);
             tableNameUnitInformation = cfg.tableNameUnitInformation();
             countryCode = cfg.countryCode();
+            soilFileName = cfg.soilFileName();
             numberOfThreads = cfg.numberOfThreads();
             limitForDebugging = cfg.limitForDebugging();
             firstPlantingYear = cfg.firstPlantingYear();
@@ -152,6 +154,7 @@ public class App
             // Showing some parameter values
             System.out.println("> OS: "+Utility.OS.toUpperCase());
             System.out.println("> ISO3: "+countryCode);
+            System.out.println("> Soil file: "+soilFileName);
             System.out.println("> Number of threads: "+numberOfThreads);
             System.out.println("> Limit: "+limitForDebugging);
             System.out.println("> Weather data: "+directoryWeather);
@@ -226,7 +229,7 @@ public class App
         TreeMap<Integer, Integer> co2History = Utility.getCO2History(directoryInput);   
 
         // Get unit information
-        Object[] unitInfo = Utility.getUnitInfo(tableNameUnitInformation, directoryInput, limitForDebugging);
+        Object[] unitInfo = Utility.getUnitInfo(tableNameUnitInformation, directoryInput, soilFileName, limitForDebugging);
         int numberOfUnits = unitInfo.length;
         System.out.println("> Number of units to run: "+numberOfUnits);
         if (numberOfUnits == 0)
@@ -454,7 +457,7 @@ public class App
         if (!new File(inputTable).isFile())
             problems.add("Unit-information table not found: " + inputTable);
 
-        String soilFile = directoryInput + "US.SOL";
+        String soilFile = directoryInput + soilFileName;
         if (!new File(soilFile).isFile())
             problems.add("Soil profile file not found: " + soilFile);
 

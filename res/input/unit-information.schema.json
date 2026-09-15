@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://cgiar.org/tokki/unit-information.schema.json",
   "title": "Tokki unit-information record",
-  "description": "One JSON object per line (JSONL). Each object is one 5-arcmin grid cell and carries a list of crops modelled at that cell. The full DSSAT soil profile is NOT stored here; it lives in US.SOL, referenced by soilProfileId.",
+  "description": "One JSON object per line (JSONL). Each object is one 5-arcmin grid cell and carries a list of crops modelled at that cell. The full DSSAT soil profile is NOT stored here; it lives in the country soil file named by soilFileName in config.yml, referenced by soilProfileId.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -40,8 +40,8 @@
     },
     "soilProfileId": {
       "type": "string",
-      "pattern": "^US[0-9]{8}$",
-      "description": "DSSAT soil profile id (US + zero-padded cell5m); resolved against US.SOL at run time."
+      "pattern": "^[A-Z]{2}[0-9]{8}$",
+      "description": "DSSAT soil profile id (2-letter country prefix + zero-padded cell5m, e.g. US02126127 or BO04812345). The prefix must match the base name of the soil file set by soilFileName in config.yml, because the thread writers derive the per-thread copy's filename from it. Resolved against that soil file at run time."
     },
     "soilRootingDepth": {
       "type": "integer",
