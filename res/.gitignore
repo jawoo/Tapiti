@@ -18,3 +18,6 @@
 input/unit-information_usa-mzsb-47707.csv
 # Generated GIS QC exports — regenerate with prep/export_gis.py
 input/qc/
+
+# Windows download-marker streams (root .gitignore rule is overridden by !input/** above)
+*:Zone.Identifier
