@@ -16,7 +16,7 @@ tableNameUnitInformation: unit-information
 countryCode: BOL
 soilFileName: BO.SOL   # base name must match the soilProfileId prefix (BO########)
 
-numberOfThreads: 48    # box has 112 cores; 48 matches the tested US ceiling
+numberOfThreads: 16    # this laptop has 20 cores; leave headroom for the OS and DSSAT I/O
 limitForDebugging: 0
 
 # Hindcast span: sowing years 1983..2024 = 42 campaigns, matching the INE
@@ -25,7 +25,7 @@ firstPlantingYear: 1983
 numberOfYears: 42
 
 directory:
-  weather: 1983-2026_bol-5crop
+  weather: 1981-2026_bol   # NASA POWER per cell, built by prep/gen_weather_bolivia.py
   working: res
   source: .csm
   temp: .temp
@@ -58,6 +58,8 @@ latBandSize: 1          # degrees latitude per band for phenology stratification
                         # Bolivia spans roughly 10-23 S
 
 useRecommendedNitrogenFertilizerRateOverride: 1
+nitrogenRateSource: actual   # actual = nFertRateAct (farmer practice, for hindcasts); recommended = nFertRateRec (upstream default)
+riceSystem: upland   # upland = direct-seeded secano (Bolivia); paddy = upstream transplanted/flooded template
 useRecordedWaterSupplyOverride: 1
 
 nitrogenFertilizerRates:

@@ -1,4 +1,4 @@
-package org.cgiar.tokki;
+package org.cgiar.tapiti;
 
 /**
  * Centralizes all directory paths used by the application.

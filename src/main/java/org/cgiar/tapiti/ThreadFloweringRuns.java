@@ -1,4 +1,4 @@
-package org.cgiar.tokki;
+package org.cgiar.tapiti;
 
 // Java utilities
 import java.io.BufferedWriter;

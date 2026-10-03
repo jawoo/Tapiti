@@ -1,4 +1,4 @@
-package org.cgiar.tokki;
+package org.cgiar.tapiti;
 
 // Apache utilities
 import org.apache.commons.csv.CSVFormat;
