@@ -1,8 +1,17 @@
-# Tokki-BO — Bolivia ENSO workspace
+# Tapiti — Bolivia ENSO crop-impact tool (a fork of Tokki)
+
+**Name.** IFPRI's gridded-DSSAT tools are named after small animals: *Tokki* (토끼, rabbit in
+Korean) was built under Korean government funding. The Bolivian successor is **Tapiti**, after
+the *tapití* (*Sylvilagus brasiliensis*), the one wild rabbit native to Bolivia's lowlands —
+the word is Guaraní. Written without the accent everywhere in code, paths and config.
+Renamed from `Tokki-BO` on 2026-10-03: directory `Tapiti`, Maven `org.cgiar:tapiti`, Java
+package `org.cgiar.tapiti`, merged output `tapiti_combinedOutput_*.csv`. The git remote to the
+upstream US code is kept as `tokki-upstream`; no GitHub repository for Tapiti exists yet.
+
 
 A clone of [jawoo/Tokki](https://github.com/jawoo/Tokki) `master` on branch `bolivia`,
-repurposed for the IFPRI Bolivia El Niño crop-impact assessment. The upstream US production
-workspace at `~/Codes/Tokki` is untouched by anything here.
+repurposed and renamed for the IFPRI Bolivia El Niño crop-impact assessment. The upstream US production
+workspace at `~/Codebase/Tokki` is untouched by anything here.
 
 Plan, data inventory and analysis live in the companion project folder
 `~/Claude/bolivia-enso` (`PLAN.md`, `DATA-INVENTORY.md`).
@@ -24,6 +33,50 @@ obvious from a grep of `App.java`.
   because `ThreadSeasonalRuns` and `ThreadFloweringRuns` derive the per-thread copy's filename
   from `soilProfileID.substring(0,2)`.
 
+### Code — which nitrogen rate is applied
+
+With `useRecommendedNitrogenFertilizerRateOverride: 1` (the US setting) upstream Tokki applies
+each record's **`nFertRateRec`**, not `nFertRateAct` — `ThreadSeasonalRuns` reads
+`cultivarOption[6]`, which `App.buildCultivarOptionFromUnit` fills from `nFertRateRec`; the
+actual rate is built into slot 7 and never used. A hindcast against observed yields wants the
+farmer rate, so `config.yml` gains **`nitrogenRateSource: actual | recommended`** (default
+`recommended`, so upstream behaviour is unchanged when the key is absent). The Bolivia config
+sets `actual`; `App` echoes `> Nitrogen rate applied:` at startup so the log records which column
+ran. Plumbed through `TokkiConfig` / `ConfigLoader` / `App` / `ThreadSeasonalRuns` (2026-10-03).
+
+### Code — rice production system (`riceSystem: paddy | upland`)
+
+Upstream writes every rice run from one template: transplanted (`PLME T`), puddled (`IR010`),
+bunded 150 mm (`IR009`), 2 mm/d percolation (`IR008`), and a 100 mm flood 5 days after
+planting (`IR003`, or `IR011` constant depth when irrigated), with `IRRIG R` and the flooded
+initial conditions. That is Asian irrigated paddy; ~90% of Bolivian rice is direct-seeded
+*secano*. `riceSystem: upland` (default `paddy` = upstream behaviour) changes both SNX writers:
+
+| | rainfed record (`waterSupply R`) | irrigated record (`waterSupply I`) |
+|---|---|---|
+| Planting | `PLME S`, `PLDS R`, 20 cm rows, 3 cm deep | same |
+| Treatment `MI` | 0 (no irrigation level, like other rainfed crops) | 2 |
+| Water management | none | `IR008 2`, `IR010` puddled, `IR009 150` at planting; `IR011 100` constant flood from **25 DAP** |
+| Initial conditions | rainfed block (`ICWD -99`, `SH2O .25`) | flooded block |
+| `IRRIG` control | `D` | `R` |
+
+Puddling stays in the irrigated variant because DSSAT (`Management/Flood_Irrig.for`) stops with
+`FIRRIG: Invalid combination of flooded field parameters` if `IR011` is used without `IR009`
+and `IR010`. Verified 2026-10-03 by reading the generated `TOUCAN00.SNX` and DSSAT's
+`OVERVIEW.OUT`: rainfed runs show `IRCM 0` and water stress; irrigated runs show zero water
+stress.
+
+**What the test also showed, and it is not a rice problem:** on a low-carbon Santa Cruz soil
+(SoilGrids SLOC 0.77%) rice with 14 kg N yields ~0.2 t/ha flooded *or* unflooded, with nitrogen
+stress of 0.8–0.9 in the vegetative phase, and climbs to 3.1 t/ha at 100 kg N; on a Beni soil
+(SLOC 1.84%) the same crop takes up 160–210 kg N mineralised from soil organic matter and
+yields 7 t/ha with zero fertiliser. Tokki starts every season with essentially **no mineral N
+in the profile** (`SNH4 = SNO3 = 0.001 ppm` in the initial conditions, inherited from the US
+setup where 150+ kg N/ha of fertiliser makes it irrelevant). In Bolivia's 0–25 kg N systems,
+initial mineral N and the SoilGrids carbon map drive the simulated yield more than anything
+in the management table. That is a Phase 2 calibration item for **all five crops**, not just
+rice (`PLAN.md` §7.3).
+
 ### Schema
 
 `res/input/unit-information.schema.json` — `soilProfileId.pattern` widened from `^US[0-9]{8}$`
@@ -39,7 +92,8 @@ for Bolivia: **`BO.SOL`**, **`unit-information.jsonl`**, **`cell-gdd.csv`**.
 
 ### Cultivars — inherited, NOT yet calibrated for Bolivia
 
-`res/.csm/MZCER048.CUL` and `SBGRO048.CUL` carry the **US** calibration. They are a starting
+`res/.csm/MZCER048.CUL` and `SBGRO048.CUL` carry the **US** calibration; the wheat, sorghum
+and rice cultivars stamped by the Phase 1 builder are stock DSSAT generics. They are a starting
 point, not a Bolivian calibration: the US work replaced degenerate yield coefficients in the
 generic maturity cultivars with realistic donor values, which is a general improvement worth
 inheriting, but the resulting levels are tuned to US yields.
@@ -73,7 +127,65 @@ Southern-hemisphere conventions, which the config comments repeat:
 re-clone or recompile DSSAT. Verified: `git status res/.csm/` is clean, i.e. the CULs match
 the repo-tracked calibrated versions rather than stock DSSAT.
 
-## Smoke test
+## Phase 1 production inputs (built 2026-10-03)
+
+| File | Built by | Content |
+|---|---|---|
+| `res/input/BO.SOL` | `~/Claude/bolivia-enso/prep/build_soil_bolivia.py` | 3,568 ISRIC SoilGrids + HC27 profiles, subset of the national `data/BO.SOL`; 10 nearest-neighbour fills logged in `derived/soil_fill_log.csv` |
+| `res/input/unit-information.jsonl` | `prep/build_unit_information_bolivia.py` | 3,469 cells, 9,249 crop records (SB 1,610, MZ 2,671, RI 1,186, SG 1,788, WH 1,994); every record carries an explicit `cultivar` |
+| `res/input/cell-gdd.csv` | same | 1991–2020 mean growing-season GDD per cell (for `prep/stamp_cultivars.py` compatibility) |
+| `res/input/unit-information-smoke.jsonl` | hand-picked | 6 cells spanning Santa Cruz (irrigated and rainfed), Beni, Tarija valleys, Potosí Altiplano — all five crops |
+| `res/weather/1981-2026_bol/` | `prep/gen_weather_bolivia.py` | NASA POWER daily weather per cell, 1981-01-01 .. 2026-09-25 |
+
+Management (sowing date, density, N rates, cultivar) comes from
+`~/Claude/bolivia-enso/derived/management_defaults_bolivia.csv`, one row per zone × crop,
+with evidence in `derived/SOURCES-management.md`. Change a number there and re-run the builder;
+nothing is hardcoded in the Java.
+
+Three things about this table that anyone running the model should know:
+
+1. **One season per crop per cell.** Output files are keyed `U{unit}_C{cell}_Y{year}_S{scenario}_{label}`
+   where the label carries crop and cultivar but not planting date, so a second season of the
+   same crop would overwrite the first. Each crop runs in its dominant campaign for the
+   department (INE 2012–2024): verano for soya, rice and highland wheat/sorghum; primavera for
+   maize; **invierno** for Santa Cruz lowland sorghum and wheat and for Tarija/Beni wheat.
+2. **WH, SG and RI need stamped cultivars.** Their CUL files contain no `*`-flagged lines, so
+   `Utility.getCultivarCodes` returns an empty list and an unstamped record silently runs nothing.
+3. **Rice runs in upland mode** (`riceSystem: upland` in `config.yml`, added 2026-10-03; see
+   the code section below). Rainfed rice is direct dry-seeded and otherwise treated like any
+   rainfed crop; irrigated rice is direct-seeded into a puddled, bunded field and flooded from
+   25 days after planting. Irrigated rice records carry 40 kg N/ha, secano 15.
+
+To run the smoke set against production weather and soil:
+
+```bash
+cd ~/Claude/bolivia-enso/Tapiti
+sed -i 's/^tableNameUnitInformation: .*/tableNameUnitInformation: unit-information-smoke/;s/^numberOfThreads: .*/numberOfThreads: 4/;s/^firstPlantingYear: .*/firstPlantingYear: 2015/;s/^numberOfYears: .*/numberOfYears: 2/' config.yml
+java -jar target/tokki-1.0-SNAPSHOT-jar-with-dependencies.jar     # ~3 s, 48 seasons
+git checkout -- config.yml
+```
+
+## Production run
+
+`config.yml` as committed is the production configuration: sowing years 1983–2024 (42
+campaigns), 16 threads, rainfall-onset planting, recorded water supply, table N rates.
+Weather must extend one full year past the last sowing year, which `1981-2026_bol` does.
+
+```bash
+cd ~/Claude/bolivia-enso/Tapiti
+nohup java -jar target/tokki-1.0-SNAPSHOT-jar-with-dependencies.jar > ../runs/prod_<tag>.log 2>&1 &
+# 9,249 crop records x 42 years = 388k DSSAT seasons; ~1 h on this laptop.
+# Merged output: res/result/tokki_combinedOutput_<epoch>.csv ; per-thread DSSAT errors: res/threads/T*/ERROR.OUT
+```
+
+Run logs of record: `~/Claude/bolivia-enso/runs/`.
+
+| Log | What it is |
+|---|---|
+| `prod_1983-2024_v1_provisional-mgmt.log` | 2026-10-03, provisional management table, recommended-N column applied; stopped by hand at 48k seasons with no DSSAT errors — a scale test only |
+| `prod_1983-2024_v2_actualN.log` | 2026-10-03, sourced management table, `nitrogenRateSource: actual`; the pre-calibration baseline |
+
+## Smoke test (Phase 0, 2026-09-15)
 
 `~/Claude/bolivia-enso/prep/smoke_inputs.py` builds a minimal end-to-end input set: three real
 5-arcmin cells in the Santa Cruz Norte Integrado soybean/maize belt, **real NASA POWER daily
@@ -81,7 +193,7 @@ weather** for 2015–2017, soya verano + maíz manual, and placeholder soil prof
 
 ```bash
 python3 ~/Claude/bolivia-enso/prep/smoke_inputs.py
-cd ~/Codes/Tokki-BO && cp config.yml.smoke config.yml
+cd ~/Claude/bolivia-enso/Tapiti && cp config.yml.smoke config.yml
 ./mvnw clean package && java -jar target/tokki-1.0-SNAPSHOT-jar-with-dependencies.jar
 # restore afterwards: git checkout -- config.yml
 ```

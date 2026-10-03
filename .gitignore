@@ -2,3 +2,6 @@ target/
 res/threads/
 # Python bytecode
 __pycache__/
+
+# Windows download-marker streams copied over with the transfer
+*:Zone.Identifier
