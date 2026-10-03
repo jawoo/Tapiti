@@ -5,8 +5,9 @@ Korean) was built under Korean government funding. The Bolivian successor is **T
 the *tapití* (*Sylvilagus brasiliensis*), the one wild rabbit native to Bolivia's lowlands —
 the word is Guaraní. Written without the accent everywhere in code, paths and config.
 Renamed from `Tokki-BO` on 2026-10-03: directory `Tapiti`, Maven `org.cgiar:tapiti`, Java
-package `org.cgiar.tapiti`, merged output `tapiti_combinedOutput_*.csv`. The git remote to the
-upstream US code is kept as `tokki-upstream`; no GitHub repository for Tapiti exists yet.
+package `org.cgiar.tapiti`, merged output `tapiti_combinedOutput_*.csv`. Repository:
+[github.com/jawoo/Tapiti](https://github.com/jawoo/Tapiti) (`origin`, branch `bolivia`); the US code
+stays reachable as the `tokki-upstream` remote.
 
 
 A clone of [jawoo/Tokki](https://github.com/jawoo/Tokki) `master` on branch `bolivia`,
