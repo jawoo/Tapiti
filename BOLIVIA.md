@@ -102,13 +102,19 @@ inheriting, but the resulting levels are tuned to US yields.
 The smoke run below shows exactly why this matters — maize comes out at up to **12.8 t/ha**
 against a Bolivian reality nearer 3–5 t/ha. Maize is the first recalibration target.
 
+## Inherited US material
+
+The US input pipeline (`prep/*.py`, `config.yml.main`, the US soil and unit tables) was removed
+from this repository on 2026-10-03, and the large US data files were purged from the history
+as well, so Tapiti's history no longer shares commits with Tokki. The US scripts remain in
+`~/Codebase/Tokki/prep/`; upstream fixes are brought across as patches rather than merges.
+
 ## Configuration
 
 | File | Purpose |
 |---|---|
 | `config.yml` | Bolivia production: sowing years 1983–2024 (42 campaigns, matching the INE *Año Agrícola* series), 48 threads |
 | `config.yml.smoke` | The exact config that produced the passing smoke run: 3 cells, sowing years 2015–2016, 4 threads |
-| `config.yml.main` | Inherited from upstream, unused |
 
 Southern-hemisphere conventions, which the config comments repeat:
 
