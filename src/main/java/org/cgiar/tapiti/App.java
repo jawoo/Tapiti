@@ -85,6 +85,10 @@ public class App
     static boolean useRecordedWaterSupplyOverride = true;
     static boolean useActualNitrogenRate = false;   // config nitrogenRateSource: actual | recommended
     static String riceSystem = "paddy";              // config riceSystem: paddy | upland
+    static double initialSoilNH4ppm = 0.001, initialSoilNO3ppm = 0.001;   // config initialSoilN: {snh4_ppm, sno3_ppm}
+    static String somModel = "century";             // config somModel: century (MESOM P) | ceres (MESOM G)
+    static int simulationStartDaysBeforePlanting = 0;   // 0 = 1 Jan of sowing year (upstream)
+    static double initialSoilWaterFraction = -1.0;        // <0 = upstream fixed 0.25/0.50; else fraction of PAW per layer
     static boolean useFixedPlantingDate = false;
     static int fixedPlantingDate = 135;
     static int latBandSize = 10;   // degrees latitude per phenology band
@@ -115,6 +119,11 @@ public class App
             useRecordedWaterSupplyOverride = cfg.useRecordedWaterSupplyOverride();
             useActualNitrogenRate = cfg.useActualNitrogenRate();
             riceSystem = cfg.riceSystem();
+            initialSoilNH4ppm = cfg.initialSoilNH4ppm();
+            initialSoilNO3ppm = cfg.initialSoilNO3ppm();
+            somModel = cfg.somModel();
+            simulationStartDaysBeforePlanting = cfg.simulationStartDaysBeforePlanting();
+            initialSoilWaterFraction = cfg.initialSoilWaterFraction();
             nitrogenFertilizerRates = cfg.nitrogenFertilizerRates();
             atmosphericCO2Values = cfg.atmosphericCO2Values();
 
@@ -164,6 +173,10 @@ public class App
             System.out.println("> Weather data: "+directoryWeather);
             System.out.println("> Management practice - Water: "+(switchScenarios[0] ? "ON" : "OFF"));
             System.out.println("> Management practice - Fertilizer: "+(switchScenarios[1] ? "ON" : "OFF"));
+            System.out.println("> Simulation start: "+(simulationStartDaysBeforePlanting>0 ? simulationStartDaysBeforePlanting+" days before planting" : "1 January of the sowing year"));
+            System.out.println("> Initial soil water: "+(initialSoilWaterFraction>=0 ? "per layer, "+initialSoilWaterFraction+" of plant-available water (field capacity when irrigated/paddy)" : "fixed 0.25 (rainfed) / 0.50 (irrigated) cm3/cm3, one layer"));
+            System.out.println("> Soil organic matter model: "+somModel+(somModel.equals("ceres") ? " (MESOM G)" : " (MESOM P, CENTURY)"));
+            System.out.println("> Initial soil mineral N: SNH4 "+initialSoilNH4ppm+" ppm, SNO3 "+initialSoilNO3ppm+" ppm");
             System.out.println("> Rice system: "+riceSystem+(riceSystem.equals("upland") ? " (direct-seeded; rainfed = no bund/flood, irrigated = flooded from 25 DAP)" : " (transplanted, puddled, bunded, flooded 5 DAP)"));
             System.out.println("> Nitrogen rate applied: "+(useRecommendedNitrogenFertilizerRateOverride ? (useActualNitrogenRate ? "per-record nFertRateAct (actual)" : "per-record nFertRateRec (recommended)") : "config nitrogenFertilizerRates list"));
             System.out.println("> Management practice - Manure: "+(switchScenarios[2] ? "ON" : "OFF"));

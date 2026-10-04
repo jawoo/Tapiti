@@ -60,6 +60,14 @@ latBandSize: 1          # degrees latitude per band for phenology stratification
 useRecommendedNitrogenFertilizerRateOverride: 1
 nitrogenRateSource: actual   # actual = nFertRateAct (farmer practice, for hindcasts); recommended = nFertRateRec (upstream default)
 riceSystem: upland   # upland = direct-seeded secano (Bolivia); paddy = upstream transplanted/flooded template
+# Pre-season boundary conditions (Phase 2 defaults, decided 2026-10-04; see BOLIVIA.md and PLAN.md §7.3).
+# Omitting any of these reverts to upstream Tokki behaviour.
+somModel: century                        # CENTURY soil organic matter (MESOM P); 'ceres' = Godwin (G)
+simulationStartDaysBeforePlanting: 60    # start 60 d before sowing instead of 1 January (10 months of bare fallow)
+initialSoilWaterFraction: 0.5            # per layer: SLLL + 0.5*(SDUL-SLLL) rainfed, SDUL irrigated/paddy
+initialSoilN:                            # ppm over the whole profile; 0.3/0.7 over 2 m ~ 27 kg N/ha
+  snh4_ppm: 0.3
+  sno3_ppm: 0.7
 useRecordedWaterSupplyOverride: 1
 
 nitrogenFertilizerRates:

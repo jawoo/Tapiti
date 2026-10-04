@@ -56,6 +56,35 @@ public final class ConfigLoader
                 ? String.valueOf(config.get("riceSystem")).trim().toLowerCase() : "paddy";
         if (!riceSystem.equals("paddy") && !riceSystem.equals("upland"))
             throw new IllegalArgumentException("riceSystem must be 'paddy' or 'upland', got '" + riceSystem + "'");
+        // Initial mineral N in the soil profile on 1 January of the sowing year (DSSAT SNH4 /
+        // SNO3, g N per Mg soil = ppm, one value for the whole profile). Upstream hardcodes
+        // 0.001 (i.e. none), harmless under US fertiliser rates and decisive under Bolivian ones.
+        double initialSoilNH4ppm = 0.001, initialSoilNO3ppm = 0.001;
+        if (config.containsKey("initialSoilN"))
+        {
+            Map<String, Object> isn = (Map<String, Object>) config.get("initialSoilN");
+            if (isn.get("snh4_ppm") != null) initialSoilNH4ppm = ((Number) isn.get("snh4_ppm")).doubleValue();
+            if (isn.get("sno3_ppm") != null) initialSoilNO3ppm = ((Number) isn.get("sno3_ppm")).doubleValue();
+        }
+        // Soil organic matter / N mineralisation model written to MESOM: "century" (DSSAT 'P',
+        // upstream default) or "ceres" (Godwin 'G'). Both read the same soil file; they differ in
+        // how SoilGrids organic carbon is turned into mineral N during the fallow and season.
+        String somModel = config.containsKey("somModel")
+                ? String.valueOf(config.get("somModel")).trim().toLowerCase() : "century";
+        if (!somModel.equals("century") && !somModel.equals("ceres"))
+            throw new IllegalArgumentException("somModel must be 'century' or 'ceres', got '" + somModel + "'");
+        // Simulation start (ICDAT/SDATE). 0 = 1 January of the sowing year (upstream behaviour:
+        // up to ~10 months of bare fallow before a verano sowing, during which mineralised N
+        // accumulates with nothing to take it up). N > 0 = start N days before the planting date,
+        // clamped to 1 January.
+        int simulationStartDaysBeforePlanting = config.containsKey("simulationStartDaysBeforePlanting")
+                ? ((Number) config.get("simulationStartDaysBeforePlanting")).intValue() : 0;
+        // Initial soil water. Absent / negative = upstream behaviour (one layer to the rooting
+        // depth at 0.25 cm3/cm3 rainfed, 0.50 flooded/irrigated, regardless of soil). 0..1 =
+        // per-layer SH2O = SLLL + f * (SDUL - SLLL) for rainfed records (fraction of
+        // plant-available water), SDUL (field capacity) for irrigated/paddy records.
+        double initialSoilWaterFraction = config.containsKey("initialSoilWaterFraction")
+                ? ((Number) config.get("initialSoilWaterFraction")).doubleValue() : -1.0;
         boolean useActualNitrogenRate = config.containsKey("nitrogenRateSource")
                 && "actual".equalsIgnoreCase(String.valueOf(config.get("nitrogenRateSource")).trim());
 
@@ -108,6 +137,11 @@ public final class ConfigLoader
                 useRecordedWaterSupplyOverride,
                 useActualNitrogenRate,
                 riceSystem,
+                initialSoilNH4ppm,
+                initialSoilNO3ppm,
+                somModel,
+                simulationStartDaysBeforePlanting,
+                initialSoilWaterFraction,
                 nitrogenFertilizerRates,
                 atmosphericCO2Values,
                 layout,

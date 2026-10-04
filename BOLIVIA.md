@@ -78,6 +78,22 @@ initial mineral N and the SoilGrids carbon map drive the simulated yield more th
 in the management table. That is a Phase 2 calibration item for **all five crops**, not just
 rice (`PLAN.md` §7.3).
 
+### Code — pre-season boundary conditions (added 2026-10-04, all default to upstream behaviour)
+
+| `config.yml` key | Default (= upstream) | Alternative | What it changes in the SNX |
+|---|---|---|---|
+| `somModel` | `century` | `ceres` | `MESOM` P or G in both simulation-control blocks |
+| `simulationStartDaysBeforePlanting` | `0` (1 January of the sowing year) | e.g. `60` | `ICDAT` / `SDATE` = planting DOY − N, clamped to 1 Jan |
+| `initialSoilWaterFraction` | absent (one layer, 0.25 rainfed / 0.50 irrigated cm³/cm³) | `0.5` | one IC line per soil layer, `SH2O = SLLL + f·(SDUL−SLLL)` rainfed, `SDUL` irrigated/paddy, read from the cell's own profile |
+| `initialSoilN: {snh4_ppm, sno3_ppm}` | `0.001 / 0.001` | e.g. `0.3 / 0.7` | `SNH4` / `SNO3` on every IC layer (ppm applies to the whole profile: 1 ppm over 2 m ≈ 27 kg N/ha) |
+
+Why they exist: upstream's 1 January start puts ~10 months of bare fallow before a verano
+sowing, during which SoilGrids organic carbon mineralises 150–250 kg N/ha that nothing takes
+up. That, not the management table, made the first Bolivia run 1.7–2.5× too high for the
+N-responsive crops (`PLAN.md` §7.3 has the sensitivity table). `App` echoes all four at startup.
+`res/input/unit-information-sample60.jsonl` is the 60-cell stratified sample used for these
+tests (36 lowland, 14 valleys, 10 Altiplano cells).
+
 ### Schema
 
 `res/input/unit-information.schema.json` — `soilProfileId.pattern` widened from `^US[0-9]{8}$`
@@ -142,6 +158,7 @@ the repo-tracked calibrated versions rather than stock DSSAT.
 | `res/input/unit-information.jsonl` | `prep/build_unit_information_bolivia.py` | 3,469 cells, 9,249 crop records (SB 1,610, MZ 2,671, RI 1,186, SG 1,788, WH 1,994); every record carries an explicit `cultivar` |
 | `res/input/cell-gdd.csv` | same | 1991–2020 mean growing-season GDD per cell (for `prep/stamp_cultivars.py` compatibility) |
 | `res/input/unit-information-smoke.jsonl` | hand-picked | 6 cells spanning Santa Cruz (irrigated and rainfed), Beni, Tarija valleys, Potosí Altiplano — all five crops |
+| `res/input/unit-information-sample60.jsonl` | random, seed 7 | 60-cell stratified sample (36/14/10 by zone) for sensitivity runs; ~15 s per 6-year run |
 | `res/weather/1981-2026_bol/` | `prep/gen_weather_bolivia.py` | NASA POWER daily weather per cell, 1981-01-01 .. 2026-09-25 |
 
 Management (sowing date, density, N rates, cultivar) comes from

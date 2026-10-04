@@ -273,28 +273,45 @@ $BATCH(SEQUENCE)
         batch.append("TOUCAN").append(dfTT.format(threadID)).append(".SNX                                                                                     ").append(dfTT.format(tn)).append("      1      0      0      0\n");
 
         // Initial Conditions
-        String icdat = yy+"001";
+        // Simulation / initial-conditions date: 1 Jan of the sowing year, or N days before planting.
+        int startDoy = App.simulationStartDaysBeforePlanting > 0 ? Math.max(1, pdate - App.simulationStartDaysBeforePlanting) : 1;
+        String icdat = yy + dfDDD.format(startDoy);
         String icbl = dfDDD.format(soilRootingDepth);
         String icwd = dfDDD.format(soilRootingDepth/2);
+        String snh4 = String.format("%5s", App.initialSoilNH4ppm < 0.01 ? ".001" : String.format("%.1f", App.initialSoilNH4ppm));
+        String sno3 = String.format("%5s", App.initialSoilNO3ppm < 0.01 ? ".001" : String.format("%.1f", App.initialSoilNO3ppm));
+        boolean wetStart = isIrrigated || (isRice && !upland);
         String snxSectionInitialConditions = "\n*INITIAL CONDITIONS\n";
-        if (isIrrigated || (isRice && !upland))
+        snxSectionInitialConditions += """
+                @C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
+                 1    FA %s   100     0     1     1   %s  1000    .8     0   100    15 -99
+                @C  ICBL  SH2O  SNH4  SNO3
+                """.formatted(icdat, wetStart ? icwd : "-99");
+        if (App.initialSoilWaterFraction >= 0)
         {
-            snxSectionInitialConditions += """
-                    @C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
-                     1    FA %s   100     0     1     1   %s  1000    .8     0   100    15 -99
-                    @C  ICBL  SH2O  SNH4  SNO3
-                     1   %s  .500  .001  .001
-                    """.formatted(icdat, icwd, icbl);
+            // Per-layer initial water from the cell's own soil profile (o[5]): SLLL + f*(SDUL-SLLL)
+            // for rainfed, SDUL for irrigated/paddy. Layers down to the rooting depth.
+            String[] lines = ((String) o[5]).split("\\r?\\n");
+            boolean inLayers = false; int written = 0;
+            for (String ln : lines)
+            {
+                if (ln.startsWith("@  SLB")) { inLayers = true; continue; }
+                if (!inLayers || ln.trim().isEmpty()) continue;
+                if (ln.startsWith("@") || ln.startsWith("*")) break;
+                String[] t = ln.trim().split("\\s+");
+                if (t.length < 5) continue;
+                int slb = (int) Double.parseDouble(t[0]);
+                double slll = Double.parseDouble(t[2]), sdul = Double.parseDouble(t[3]);
+                if (slb > soilRootingDepth && written > 0) break;
+                double sh2o = wetStart ? sdul : slll + App.initialSoilWaterFraction * (sdul - slll);
+                snxSectionInitialConditions += String.format(" 1   %3d %5.3f %s %s\n", Math.min(slb, soilRootingDepth), sh2o, snh4, sno3);
+                written++;
+            }
+            if (written == 0)   // malformed profile: fall back to the single-layer line
+                snxSectionInitialConditions += String.format(" 1   %s %5s %s %s\n", icbl, wetStart ? ".500" : ".250", snh4, sno3);
         }
         else
-        {
-            snxSectionInitialConditions += """
-                    @C   PCR ICDAT  ICRT  ICND  ICRN  ICRE  ICWD ICRES ICREN ICREP ICRIP ICRID ICNAME
-                     1    FA %s   100     0     1     1   -99  1000    .8     0   100    15 -99
-                    @C  ICBL  SH2O  SNH4  SNO3
-                     1   %s  .250  .001  .001
-                    """.formatted(icdat, icbl);
-        }
+            snxSectionInitialConditions += String.format(" 1   %s %5s %s %s\n", icbl, wetStart ? ".500" : ".250", snh4, sno3);
 
         // Environment modifications
         String snxSectionEnvironmentModification = """
@@ -329,6 +346,7 @@ $BATCH(SEQUENCE)
         // Simulation controls
         String irrig = "D";  if (isRice && (!upland || isIrrigated))  irrig = "R";
         String harvs = "M";  if (isWheat) harvs = "R";
+        String mesom = App.somModel.equals("ceres") ? "G" : "P";   // MESOM: CENTURY (P) or Godwin/CERES (G) soil organic matter
         String nyers = "01";  // one season per DSSAT call; year loop is in ThreadSeasonalRuns
         String snxSectionSimulationControls = """
 
@@ -338,7 +356,7 @@ $BATCH(SEQUENCE)
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
  1 OP              Y     Y     Y     N     N     N     N     N     D
 @N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 1 ME              G     M     E     R     S     C     R     1     P     S     2
+ 1 ME              G     M     E     R     S     C     R     1     %s     S     2
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  1 MA              R     %s     D     R     %s
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
@@ -359,7 +377,7 @@ $BATCH(SEQUENCE)
 @N OPTIONS     WATER NITRO SYMBI PHOSP POTAS DISES  CHEM  TILL   CO2
  2 OP              Y     Y     Y     N     N     N     N     N     D
 @N METHODS     WTHER INCON LIGHT EVAPO INFIL PHOTO HYDRO NSWIT MESOM MESEV MESOL
- 2 ME              G     M     E     R     S     C     R     1     P     S     2
+ 2 ME              G     M     E     R     S     C     R     1     %s     S     2
 @N MANAGEMENT  PLANT IRRIG FERTI RESID HARVS
  2 MA              R     N     N     R     R
 @N OUTPUTS     FNAME OVVEW SUMRY FROPT GROUT CAOUT WAOUT NIOUT MIOUT DIOUT VBOSE CHOUT OPOUT FMOPT
@@ -375,7 +393,7 @@ $BATCH(SEQUENCE)
  2 RE            100     1    20
 @N HARVEST     HFRST HLAST HPCNP HPCNR
  2 HA              0 79065   100   %s
-""".formatted(nyers, icdat, irrig, harvs, icdat, icdat, hbpc, icdat, hbpc);
+""".formatted(nyers, icdat, mesom, irrig, harvs, icdat, icdat, hbpc, icdat, mesom, hbpc);
 
         // SNX
         String snx = "*EXP.DETAILS: TOUCAN"+dfTT.format(threadID)+"SN SEASONAL RUNS\n" +
