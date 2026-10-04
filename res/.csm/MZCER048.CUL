@@ -257,3 +257,9 @@ IB0200 32P55                . IB0004 215.0 0.500 650.0 740.0  8.19 45.90
 !IB0060 H610(UH)             . IB0001 365.0 0.520 850.0 680.0  6.50 38.90
 !IB0063 PIO X 304C           . IB0001 365.0 0.520 920.0 780.0  5.70 38.90
 !IB0070 CARGILL 111S         . IB0001 290.0 0.500 1035. 580.0  5.50 47.00
+! Bolivia (Tapiti) zone cultivars, 2026-10-04: phenology from the DSSAT generics, yield components
+! set against INE 2012-2024 departmental yields on a 60-cell sample (PLAN.md 7.3). Stock DSSAT G2/G3
+! for LONG/MEDIUM/SHORT are 620/6.0, 700/8.5, 820/6.6; the US-calibrated generics above are higher.
+BOLL11 BOL LOWLAND          . IB0001 320.0 0.520 940.0 682.0  6.00 38.90
+BOLV03 BOL VALLEYS          . IB0001 200.0 0.300 800.0 420.0  5.00 38.90
+BOLA03 BOL ALTIPLANO        . IB0001 110.0 0.300 680.0 820.4  10.0 38.90

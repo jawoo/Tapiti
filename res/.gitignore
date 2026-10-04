@@ -21,3 +21,5 @@ input/qc/
 
 # Windows download-marker streams (root .gitignore rule is overridden by !input/** above)
 *:Zone.Identifier
+!.csm/RICER048.CUL
+!.csm/SGCER048.CUL

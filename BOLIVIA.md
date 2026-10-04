@@ -107,7 +107,16 @@ for Bolivia: **`BO.SOL`**, **`unit-information.jsonl`**, **`cell-gdd.csv`**.
 
 `CO2048.csv` is kept as-is — it spans 1958–2050 and is global.
 
-### Cultivars — inherited, NOT yet calibrated for Bolivia
+### Cultivars — Bolivia zone cultivars (2026-10-04)
+
+`res/.csm/MZCER048.CUL`, `RICER048.CUL` and `SGCER048.CUL` carry `BOL*` cultivars calibrated on
+INE yield levels (method and grids in `PLAN.md` §7.3b): `BOLL11 BOL LOWLAND`, `BOLV03 BOL
+VALLEYS`, `BOLA03 BOL ALTIPLANO` (maize, stamped by elevation zone), `BOLRI1 BOL SECANO`
+(rice) and `BOLSG1 BOL GRANIFERO` (sorghum). Wheat keeps `AW0071 Yecora_Rojo` and runs ~1.6×
+INE (no coefficient tested moves it); soybean keeps the latitude rule (MG 8). The GDD-class
+rule from the US run is no longer used for maize; `cell-gdd.csv` is kept for reference.
+
+#### Before 2026-10-04 — inherited, not calibrated
 
 `res/.csm/MZCER048.CUL` and `SBGRO048.CUL` carry the **US** calibration; the wheat, sorghum
 and rice cultivars stamped by the Phase 1 builder are stock DSSAT generics. They are a starting
