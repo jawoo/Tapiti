@@ -213,6 +213,10 @@ nohup java -jar target/tokki-1.0-SNAPSHOT-jar-with-dependencies.jar > ../runs/pr
 
 Run logs of record: `~/Claude/bolivia-enso/runs/`.
 
+**Outputs are wiped at the next launch** — launch with `~/Claude/bolivia-enso/analysis/run_tapiti.sh <tag>` and archive with `analysis/archive_run.sh <tag> <log>` (timestamped folder under `runs/` with manifest, config snapshot, gzipped output and summaries). `App` clears `res/result/` and `res/.temp/summary/` on
+startup, so move the merged `*combinedOutput*.csv` into `~/Claude/bolivia-enso/runs/<tag>/`
+as soon as a run finishes. Two full runs (v4, v5) were lost this way before the recipe said so.
+
 | Log | What it is |
 |---|---|
 | `prod_1983-2024_v1_provisional-mgmt.log` | 2026-10-03, provisional management table, recommended-N column applied; stopped by hand at 48k seasons with no DSSAT errors — a scale test only |
