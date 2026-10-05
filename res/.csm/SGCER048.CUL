@@ -106,5 +106,5 @@ IB0059 IS15401              . IB0002 500.0 300.0 12.80 1800. 640.5 300.5  81.5 3
 ! 4.8.0 cultivar coefficients (before changes in soil temperature subroutine)
 !IB0026 CSH-1                . IB0001 410.0 102.0 13.60  40.0 617.5 152.5  81.5 640.0 49.00   3.0   6.5             
 !IB0040 RS610                . IB0001 460.0 102.0 12.50  90.0 617.5 152.5  81.5 600.0 49.00   5.0   6.0             
-! Bolivia (Tapiti) 2026-10-04: N.AMERICAN generic with G2 (partitioning to panicle) 6.0 -> 2.6, set against INE 2012-2024 Santa Cruz invierno sorghum on a 60-cell sample (PLAN.md 7.3).
-BOLSG1 BOL GRANIFERO        . IB0001 360.0 102.0 12.50  30.0 617.5 152.5  81.5 540.0 49.00    .0   2.6
+! Bolivia (Tapiti) 2026-10-04: N.AMERICAN generic with G2 (partitioning to panicle) 6.0 -> 3.4 (round 2; 2.6 gave 0.82x at full scale), set against INE 2012-2024 Santa Cruz invierno sorghum on a 60-cell sample (PLAN.md 7.3).
+BOLSG1 BOL GRANIFERO        . IB0001 360.0 102.0 12.50  30.0 617.5 152.5  81.5 540.0 49.00    .0   3.4
